@@ -149,13 +149,7 @@ class OpMatchMeshNames(bpy.types.Operator):
 class OpBulkExport(bpy.types.Operator):
     bl_idname = 'object.skunk_bulk_export'
     bl_label = 'Bulk Export'
-    bl_description = 'Exports selected models as FBX to desktop'
-
-    directory: bpy.props.StringProperty(
-        name='Directory',
-        description='Directory where to bulk export',
-        subtype='DIR_PATH'
-    )
+    bl_description = 'Exports selected objects as FBX to desktop'
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -167,7 +161,7 @@ class OpBulkExport(bpy.types.Operator):
 
         self.report(
             {'INFO'},
-            f'Exported {len(objects)} objects to {self.directory}'
+            f'Exported {len(objects)} objects to Desktop'
         )
 
         return {'FINISHED'}
@@ -216,6 +210,109 @@ class OpBulkExport(bpy.types.Operator):
         bpy.data.scenes.remove(temp_scene)
 
 
+class OpCreateLODs(bpy.types.Operator):
+    bl_idname = 'object.skunk_create_lods'
+    bl_label = 'Create LODs'
+    bl_description = 'Creates LODs for selected objects'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    lod_count: bpy.props.IntProperty(
+        name='LODs',
+        description='LOD count',
+        default=2,
+        min=0,
+        max=5
+    )
+
+    decimate_ratio: bpy.props.FloatProperty(
+        name='Decimate ratio',
+        description='Decimate ratio applied to LODs, first LOD will receive this value as is, '
+                    'following LODs will stack this value',
+        default=0.5,
+        min=0.0,
+        max=1.0
+    )
+
+    is_delete_old_lods: bpy.props.BoolProperty(
+        name='Delete Old LODs',
+        description='Should old LODs be deleted/overwritten?',
+        default=True,
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        objects = context.selected_objects[:]
+
+        if self.is_delete_old_lods:
+            self.delete_lods(self.get_valid_objects(objects))
+
+        self.create_lods(self.get_valid_objects(objects), self.lod_count, self.decimate_ratio)
+
+        self.report(
+            {'INFO'},
+            f'Created {self.lod_count} LODs for {len(objects)} objects'
+        )
+
+        return {'FINISHED'}
+
+    @staticmethod
+    def get_valid_objects(objects):
+        valid_objects = []
+
+        for object in objects:
+            if object.type == 'MESH':
+                valid_objects.append(object)
+            else:
+                for object_child in object.children_recursive:
+                    if object_child.type == 'MESH':
+                        valid_objects.append(object_child)
+
+        return valid_objects
+
+    @staticmethod
+    def delete_lods(objects):
+        for object in objects:
+            object_name = object.name
+
+            if object_name.endswith('_LOD0'):
+                continue
+            else:
+                bpy.data.objects.remove(object, do_unlink=True)
+
+    @staticmethod
+    def create_lods(objects, lod_count, decimate_ratio):
+        for object in objects:
+            for lod_index in range(1, lod_count + 1):
+                OpCreateLODs.create_lod(object, lod_index, pow(decimate_ratio, lod_index))
+
+    @staticmethod
+    def create_lod(object, lod_index, decimate_ratio):
+
+        # Copy data
+        object_copy = object.copy()
+        object_copy.data = object.data.copy()
+        object_copy.location = object.location
+
+        bpy.context.collection.objects.link(object_copy)
+
+        # Naming
+        if object.name.endswith('_LOD0'):
+            object_name = object.name.replace('_LOD0', f'_LOD{lod_index}')
+        else:
+            object_name = f'{object.name}_LOD{lod_index}'
+
+        object_copy.data.name = object_name
+        object_copy.name = object_name
+
+        # Decimate
+        decimate_modifier = object_copy.modifiers.new(name='Decimate', type='DECIMATE')
+        decimate_modifier.ratio = decimate_ratio
+        bpy.context.view_layer.objects.active = object_copy
+        bpy.ops.object.modifier_apply(modifier=decimate_modifier.name)
+
+
 class SkunkPanel(bpy.types.Panel):
     bl_idname = 'skunk_panel'
     bl_label = 'Skunk'
@@ -229,6 +326,7 @@ class SkunkPanel(bpy.types.Panel):
         layout.operator(OpDistributeObjects.bl_idname)
         layout.operator(OpCreateEmptyParents.bl_idname)
         layout.operator(OpMatchMeshNames.bl_idname)
+        layout.operator(OpCreateLODs.bl_idname)
         layout.operator(OpBulkExport.bl_idname)
 
 
@@ -236,6 +334,7 @@ def register():
     bpy.utils.register_class(OpDistributeObjects)
     bpy.utils.register_class(OpCreateEmptyParents)
     bpy.utils.register_class(OpMatchMeshNames)
+    bpy.utils.register_class(OpCreateLODs)
     bpy.utils.register_class(OpBulkExport)
     bpy.utils.register_class(SkunkPanel)
 
@@ -244,6 +343,7 @@ def unregister():
     bpy.utils.unregister_class(OpDistributeObjects)
     bpy.utils.unregister_class(OpCreateEmptyParents)
     bpy.utils.unregister_class(OpMatchMeshNames)
+    bpy.utils.unregister_class(OpCreateLODs)
     bpy.utils.unregister_class(OpBulkExport)
     bpy.utils.unregister_class(SkunkPanel)
 
