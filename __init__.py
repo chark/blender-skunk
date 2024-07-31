@@ -8,7 +8,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 2),
+    'version': (0, 0, 3),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -163,7 +163,7 @@ class OpCreateUVs(bpy.types.Operator):
     margin: bpy.props.FloatProperty(
         name='Light-map UV Margin',
         description='Margin of lightmap UV (aka UV1)',
-        default=0.25,
+        default=0.5,
         min=0.0,
         max=1.0
     )
