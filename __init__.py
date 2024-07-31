@@ -8,7 +8,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 1),
+    'version': (0, 0, 2),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -146,68 +146,94 @@ class OpMatchMeshNames(bpy.types.Operator):
         return updated_objects
 
 
-class OpBulkExport(bpy.types.Operator):
-    bl_idname = 'object.skunk_bulk_export'
-    bl_label = 'Bulk Export'
-    bl_description = 'Exports selected objects as FBX to desktop'
+class OpCreateUVs(bpy.types.Operator):
+    bl_idname = 'object.skunk_create_uvs'
+    bl_label = 'Create UVs'
+    bl_description = 'Creates UV0 & UV1, UV1 being a light-map UV'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    pack_quality: bpy.props.IntProperty(
+        name='Light-map UV Quality',
+        description='Pack Quality of lightmap UV (aka UV1)',
+        default=48,
+        min=1,
+        max=48
+    )
+
+    margin: bpy.props.FloatProperty(
+        name='Light-map UV Margin',
+        description='Margin of lightmap UV (aka UV1)',
+        default=0.25,
+        min=0.0,
+        max=1.0
+    )
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
-        objects = context.selected_objects[:]
+        objects = self.get_valid_objects(context.selected_objects[:])
 
-        self.export_fbx(objects)
+        self.normalize_uv_layers(objects)
+        self.create_lightmap_uvs(
+            objects=objects,
+            pack_quality=self.pack_quality,
+            margin=self.margin
+        )
 
         self.report(
             {'INFO'},
-            f'Exported {len(objects)} objects to Desktop'
+            f'Created UVs for {len(objects)} objects'
         )
 
         return {'FINISHED'}
 
     @staticmethod
-    def export_fbx(objects):
-
-        # Create a temp scene where exporting will take place
-        temp_scene = bpy.data.scenes.new('TempFBXExportScene')
-        bpy.context.window.scene = temp_scene
+    def get_valid_objects(objects):
+        valid_objects = []
 
         for object in objects:
-            temp_scene.collection.objects.link(object)
+            if object.type == 'MESH':
+                valid_objects.append(object)
+            else:
+                for child_object in object.children_recursive:
+                    if child_object.type == 'MESH':
+                        valid_objects.append(child_object)
 
-            for child_object in object.children_recursive:
-                temp_scene.collection.objects.link(child_object)
+        return valid_objects
 
+    @staticmethod
+    def normalize_uv_layers(objects):
         for object in objects:
-            path = os.path.join(os.path.expanduser('~'), 'Desktop', f'{object.name}.fbx')
+            uv_layers = object.data.uv_layers
+            uv_index = 0
 
-            bpy.ops.object.select_all(action='DESELECT')
+            for uv_layer in uv_layers:
+                uv_layer.name = f'UV{uv_index}'
 
-            # Select a target object with children (needed to export only the selection)
-            object.select_set(True)
+                uv_index = uv_index + 1
 
-            for child_object in object.children_recursive:
-                child_object.select_set(True)
+            uv_index = len(uv_layers)
+            while len(uv_layers) < 2:
+                uv_layers.new(name=f'UV{uv_index}')
+                uv_index = uv_index + 1
 
-            original_location = object.location.copy()
-            object.location = (0, 0, 0)
+    @staticmethod
+    def create_lightmap_uvs(objects, pack_quality, margin):
+        for object in objects:
+            bpy.context.view_layer.objects.active = object
 
-            bpy.ops.export_scene.fbx(
-                filepath=path,
-                use_selection=True,
-                object_types={'MESH', 'ARMATURE', 'EMPTY'},
-                apply_scale_options='FBX_SCALE_ALL',
-                axis_forward='-Y',
-                axis_up='Z',
-                use_space_transform=False,
-                apply_unit_scale=True,
+            # Set the current UV map to UV1
+            bpy.ops.object.mode_set(mode='EDIT')
+            object.data.uv_layers.active = object.data.uv_layers.get('UV1')
+
+            # Perform lightmap unpacking on UV1
+            bpy.ops.uv.lightmap_pack(
+                PREF_CONTEXT='ALL_FACES',
+                PREF_BOX_DIV=pack_quality,
+                PREF_MARGIN_DIV=margin
             )
-
-            object.location = original_location
-
-        # Remove temp scene
-        bpy.data.scenes.remove(temp_scene)
+            bpy.ops.object.mode_set(mode='OBJECT')
 
 
 class OpCreateLODs(bpy.types.Operator):
@@ -313,6 +339,70 @@ class OpCreateLODs(bpy.types.Operator):
         bpy.ops.object.modifier_apply(modifier=decimate_modifier.name)
 
 
+class OpBulkExport(bpy.types.Operator):
+    bl_idname = 'object.skunk_bulk_export'
+    bl_label = 'Bulk Export'
+    bl_description = 'Exports selected objects as FBX to desktop'
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        objects = context.selected_objects[:]
+
+        self.export_fbx(objects)
+
+        self.report(
+            {'INFO'},
+            f'Exported {len(objects)} objects to Desktop'
+        )
+
+        return {'FINISHED'}
+
+    @staticmethod
+    def export_fbx(objects):
+
+        # Create a temp scene where exporting will take place
+        temp_scene = bpy.data.scenes.new('TempFBXExportScene')
+        bpy.context.window.scene = temp_scene
+
+        for object in objects:
+            temp_scene.collection.objects.link(object)
+
+            for child_object in object.children_recursive:
+                temp_scene.collection.objects.link(child_object)
+
+        for object in objects:
+            path = os.path.join(os.path.expanduser('~'), 'Desktop', f'{object.name}.fbx')
+
+            bpy.ops.object.select_all(action='DESELECT')
+
+            # Select a target object with children (needed to export only the selection)
+            object.select_set(True)
+
+            for child_object in object.children_recursive:
+                child_object.select_set(True)
+
+            original_location = object.location.copy()
+            object.location = (0, 0, 0)
+
+            bpy.ops.export_scene.fbx(
+                filepath=path,
+                use_selection=True,
+                object_types={'MESH', 'ARMATURE', 'EMPTY'},
+                apply_scale_options='FBX_SCALE_ALL',
+                axis_forward='-Y',
+                axis_up='Z',
+                use_space_transform=False,
+                apply_unit_scale=True,
+            )
+
+            object.location = original_location
+
+        # Remove temp scene
+        bpy.data.scenes.remove(temp_scene)
+
+
 class SkunkPanel(bpy.types.Panel):
     bl_idname = 'skunk_panel'
     bl_label = 'Skunk'
@@ -326,6 +416,7 @@ class SkunkPanel(bpy.types.Panel):
         layout.operator(OpDistributeObjects.bl_idname)
         layout.operator(OpCreateEmptyParents.bl_idname)
         layout.operator(OpMatchMeshNames.bl_idname)
+        layout.operator(OpCreateUVs.bl_idname)
         layout.operator(OpCreateLODs.bl_idname)
         layout.operator(OpBulkExport.bl_idname)
 
@@ -334,6 +425,7 @@ def register():
     bpy.utils.register_class(OpDistributeObjects)
     bpy.utils.register_class(OpCreateEmptyParents)
     bpy.utils.register_class(OpMatchMeshNames)
+    bpy.utils.register_class(OpCreateUVs)
     bpy.utils.register_class(OpCreateLODs)
     bpy.utils.register_class(OpBulkExport)
     bpy.utils.register_class(SkunkPanel)
@@ -343,6 +435,7 @@ def unregister():
     bpy.utils.unregister_class(OpDistributeObjects)
     bpy.utils.unregister_class(OpCreateEmptyParents)
     bpy.utils.unregister_class(OpMatchMeshNames)
+    bpy.utils.unregister_class(OpCreateUVs)
     bpy.utils.unregister_class(OpCreateLODs)
     bpy.utils.unregister_class(OpBulkExport)
     bpy.utils.unregister_class(SkunkPanel)
