@@ -1,4 +1,5 @@
-﻿import bpy
+﻿import math
+import bpy
 import os
 
 bl_info = {
@@ -152,21 +153,39 @@ class OpCreateUVs(bpy.types.Operator):
     bl_description = 'Creates UV0 & UV1, UV1 being a light-map UV'
     bl_options = {'REGISTER', 'UNDO'}
 
-    pack_quality: bpy.props.IntProperty(
-        name='Light-map UV Quality',
-        description='Pack Quality of lightmap UV (aka UV1)',
-        default=48,
-        min=1,
-        max=48
+    angle_limit: bpy.props.FloatProperty(
+        name='Angle Limit',
+        description='Angle limit of Smart UV Project',
+        default=math.radians(70.0),
+        min=0.0,
+        max=math.radians(89.0),
+        subtype='ANGLE'
     )
 
-    margin: bpy.props.FloatProperty(
-        name='Light-map UV Margin',
-        description='Margin of lightmap UV (aka UV1)',
-        default=0.5,
+    island_margin: bpy.props.FloatProperty(
+        name='Island Margin',
+        description='Island Margin of Smart UV Project',
+        default=0.2,
         min=0.0,
         max=1.0
     )
+    # Old approach using lightmap pack - results in iffy UVs which cause leaks
+    # pack_quality: bpy.props.IntProperty(
+    #     name='Light-map UV Quality',
+    #     description='Pack Quality of lightmap UV (aka UV1)',
+    #     default=48,
+    #     min=1,
+    #     max=48
+    # )
+
+    # Old approach using lightmap pack - results in iffy UVs which cause leaks
+    # margin: bpy.props.FloatProperty(
+    #     name='Light-map UV Margin',
+    #     description='Margin of lightmap UV (aka UV1)',
+    #     default=0.5,
+    #     min=0.0,
+    #     max=1.0
+    # )
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -175,10 +194,11 @@ class OpCreateUVs(bpy.types.Operator):
         objects = self.get_valid_objects(context.selected_objects[:])
 
         self.normalize_uv_layers(objects)
-        self.create_lightmap_uvs(
+
+        self.create_lightmap_uvs_smart(
             objects=objects,
-            pack_quality=self.pack_quality,
-            margin=self.margin
+            angle_limit=self.angle_limit,
+            island_margin=self.island_margin
         )
 
         self.report(
@@ -219,7 +239,26 @@ class OpCreateUVs(bpy.types.Operator):
                 uv_index = uv_index + 1
 
     @staticmethod
-    def create_lightmap_uvs(objects, pack_quality, margin):
+    def create_lightmap_uvs_smart(objects, angle_limit, island_margin):
+        for object in objects:
+            bpy.context.view_layer.objects.active = object
+
+            # Set the current UV map to UV1
+            bpy.ops.object.mode_set(mode='EDIT')
+            object.data.uv_layers.active = object.data.uv_layers.get('UV1')
+
+            # Perform lightmap unpacking on UV1
+            bpy.ops.uv.smart_project(
+                angle_limit=angle_limit,
+                island_margin=island_margin,
+                scale_to_bounds=True
+            )
+
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Old approach using lightmap pack - results in iffy UVs which cause leaks
+    @staticmethod
+    def create_lightmap_uvs_simple(objects, pack_quality, margin):
         for object in objects:
             bpy.context.view_layer.objects.active = object
 
