@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 3),
+    'version': (0, 0, 4),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
