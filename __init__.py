@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 6),
+    'version': (0, 0, 7),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -249,6 +249,8 @@ class OpCreateUVs(bpy.types.Operator):
 
             # Set the current UV map to UV1
             bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+
             object.data.uv_layers.active = object.data.uv_layers.get('UV1')
 
             # Perform lightmap unpacking on UV1
