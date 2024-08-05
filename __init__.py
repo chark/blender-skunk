@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 7),
+    'version': (0, 0, 8),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -148,6 +148,62 @@ class OpMatchMeshNames(bpy.types.Operator):
                 OpMatchMeshNames.match_mesh_name_to_object(object.children, updated_objects)
 
         return updated_objects
+
+
+class OpSortMeshByMaterial(bpy.types.Operator):
+    bl_idname = 'object.skunk_sort_mesh_by_material'
+    bl_label = 'Sort Mesh By Material'
+    bl_description = (
+        'Sorts mesh data by material information, this ensures same the material '
+        'order on each selected object'
+    )
+
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        objects = context.selected_objects[:]
+        valid_objects = self.get_valid_objects(objects)
+
+        self.sort_mesh_data(valid_objects)
+
+        self.report(
+            {'INFO'},
+            f'Sorted mesh data of {len(valid_objects)} objects'
+        )
+
+        return {'FINISHED'}
+
+    @staticmethod
+    def get_valid_objects(objects):
+        valid_objects = []
+
+        for object in objects:
+            if object.type == 'MESH':
+                valid_objects.append(object)
+            else:
+                for child_object in object.children_recursive:
+                    if child_object.type == 'MESH':
+                        valid_objects.append(child_object)
+
+        return valid_objects
+
+    @staticmethod
+    def sort_mesh_data(objects):
+        for object in objects:
+            bpy.context.view_layer.objects.active = object
+
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+
+            bpy.ops.mesh.sort_elements(
+                type='MATERIAL',
+                elements={'FACE'}
+            )
+
+            bpy.ops.object.mode_set(mode='OBJECT')
 
 
 class OpCreateUVs(bpy.types.Operator):
@@ -552,6 +608,7 @@ class SkunkPanel(bpy.types.Panel):
         layout.operator(OpDistributeObjects.bl_idname)
         layout.operator(OpCreateEmptyParents.bl_idname)
         layout.operator(OpMatchMeshNames.bl_idname)
+        layout.operator(OpSortMeshByMaterial.bl_idname)
         layout.operator(OpCreateUVs.bl_idname)
         layout.operator(OpDeleteLODs.bl_idname)
         layout.operator(OpCreateLODs.bl_idname)
@@ -562,6 +619,7 @@ def register():
     bpy.utils.register_class(OpDistributeObjects)
     bpy.utils.register_class(OpCreateEmptyParents)
     bpy.utils.register_class(OpMatchMeshNames)
+    bpy.utils.register_class(OpSortMeshByMaterial)
     bpy.utils.register_class(OpCreateUVs)
     bpy.utils.register_class(OpDeleteLODs)
     bpy.utils.register_class(OpCreateLODs)
@@ -573,6 +631,7 @@ def unregister():
     bpy.utils.unregister_class(OpDistributeObjects)
     bpy.utils.unregister_class(OpCreateEmptyParents)
     bpy.utils.unregister_class(OpMatchMeshNames)
+    bpy.utils.unregister_class(OpSortMeshByMaterial)
     bpy.utils.unregister_class(OpCreateUVs)
     bpy.utils.unregister_class(OpDeleteLODs)
     bpy.utils.unregister_class(OpCreateLODs)
