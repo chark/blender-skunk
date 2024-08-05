@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 8),
+    'version': (0, 0, 9),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -215,7 +215,7 @@ class OpCreateUVs(bpy.types.Operator):
     angle_limit: bpy.props.FloatProperty(
         name='Angle Limit',
         description='Angle limit of Smart UV Project',
-        default=math.radians(70.0),
+        default=math.radians(89.0),
         min=0.0,
         max=math.radians(89.0),
         subtype='ANGLE'
@@ -224,7 +224,7 @@ class OpCreateUVs(bpy.types.Operator):
     island_margin: bpy.props.FloatProperty(
         name='Island Margin',
         description='Island Margin of Smart UV Project',
-        default=0.2,
+        default=0.1,
         min=0.0,
         max=1.0
     )
@@ -313,7 +313,9 @@ class OpCreateUVs(bpy.types.Operator):
             bpy.ops.uv.smart_project(
                 angle_limit=angle_limit,
                 island_margin=island_margin,
-                scale_to_bounds=True
+                area_weight=1.0,
+                scale_to_bounds=True,
+                correct_aspect=True,
             )
 
             bpy.ops.object.mode_set(mode='OBJECT')
