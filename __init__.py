@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 5),
+    'version': (0, 0, 6),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -279,6 +279,78 @@ class OpCreateUVs(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
 
 
+class OpDeleteLODs(bpy.types.Operator):
+    bl_idname = 'object.skunk_delete_lods'
+    bl_label = 'Delete LODs'
+    bl_description = 'Deletes LODs for selected objects'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        objects = context.selected_objects[:]
+        valid_objects = self.get_valid_objects(objects)
+
+        self.delete_lods(valid_objects)
+        self.delete_unused_data_blocks()
+
+        self.report(
+            {'INFO'},
+            f'Deleted LODs for {len(valid_objects)} objects'
+        )
+
+        return {'FINISHED'}
+
+    @staticmethod
+    def get_valid_objects(objects):
+        valid_objects = []
+
+        for object in objects:
+            if object.type == 'MESH':
+                valid_objects.append(object)
+            else:
+                for object_child in object.children_recursive:
+                    if object_child.type == 'MESH':
+                        valid_objects.append(object_child)
+
+        return valid_objects
+
+    @staticmethod
+    def delete_lods(objects):
+        for object in objects:
+            object_name = object.name
+
+            if object_name.endswith('_LOD0'):
+                continue
+            else:
+                bpy.data.objects.remove(object, do_unlink=True)
+
+    @staticmethod
+    def delete_unused_data_blocks():
+        for block in bpy.data.meshes:
+            if block.users == 0:
+                bpy.data.meshes.remove(block)
+
+        for block in bpy.data.materials:
+            if block.users == 0:
+                bpy.data.materials.remove(block)
+
+        for block in bpy.data.textures:
+            if block.users == 0:
+                bpy.data.textures.remove(block)
+
+        for block in bpy.data.images:
+            if block.users == 0:
+                bpy.data.images.remove(block)
+
+    @staticmethod
+    def create_lods(objects, lod_count, decimate_ratio):
+        for object in objects:
+            for lod_index in range(1, lod_count + 1):
+                OpCreateLODs.create_lod(object, lod_index, pow(decimate_ratio, lod_index))
+
+
 class OpCreateLODs(bpy.types.Operator):
     bl_idname = 'object.skunk_create_lods'
     bl_label = 'Create LODs'
@@ -479,6 +551,7 @@ class SkunkPanel(bpy.types.Panel):
         layout.operator(OpCreateEmptyParents.bl_idname)
         layout.operator(OpMatchMeshNames.bl_idname)
         layout.operator(OpCreateUVs.bl_idname)
+        layout.operator(OpDeleteLODs.bl_idname)
         layout.operator(OpCreateLODs.bl_idname)
         layout.operator(OpBulkExport.bl_idname)
 
@@ -488,6 +561,7 @@ def register():
     bpy.utils.register_class(OpCreateEmptyParents)
     bpy.utils.register_class(OpMatchMeshNames)
     bpy.utils.register_class(OpCreateUVs)
+    bpy.utils.register_class(OpDeleteLODs)
     bpy.utils.register_class(OpCreateLODs)
     bpy.utils.register_class(OpBulkExport)
     bpy.utils.register_class(SkunkPanel)
@@ -498,6 +572,7 @@ def unregister():
     bpy.utils.unregister_class(OpCreateEmptyParents)
     bpy.utils.unregister_class(OpMatchMeshNames)
     bpy.utils.unregister_class(OpCreateUVs)
+    bpy.utils.unregister_class(OpDeleteLODs)
     bpy.utils.unregister_class(OpCreateLODs)
     bpy.utils.unregister_class(OpBulkExport)
     bpy.utils.unregister_class(SkunkPanel)
