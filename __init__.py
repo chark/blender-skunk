@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 4),
+    'version': (0, 0, 5),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -74,7 +74,10 @@ class OpCreateEmptyParents(bpy.types.Operator):
     def execute(self, context):
         objects = context.selected_objects[:]
 
-        self.create_empty_parents(objects)
+        self.create_empty_parents(
+            objects=objects,
+            child_name_suffix=self.child_name_suffix
+        )
 
         self.report(
             {'INFO'},
