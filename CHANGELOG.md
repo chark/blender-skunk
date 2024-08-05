@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
-- Parenting function not applying child name.
+- Parenting function is not applying a child's name.
+- Data blocks not being removed when deleting LODs.
 
 ## [v0.0.4](https://github.com/chark/blender-skunk/compare/v0.0.3...v0.0.4) - 2024-08-01
 

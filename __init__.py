@@ -172,6 +172,7 @@ class OpCreateUVs(bpy.types.Operator):
         min=0.0,
         max=1.0
     )
+
     # Old approach using lightmap pack - results in iffy UVs which cause leaks
     # pack_quality: bpy.props.IntProperty(
     #     name='Light-map UV Quality',
@@ -315,6 +316,7 @@ class OpCreateLODs(bpy.types.Operator):
 
         if self.is_delete_old_lods:
             self.delete_lods(self.get_valid_objects(objects))
+            self.delete_unused_data_blocks()
 
         self.create_lods(self.get_valid_objects(objects), self.lod_count, self.decimate_ratio)
 
@@ -348,6 +350,24 @@ class OpCreateLODs(bpy.types.Operator):
                 continue
             else:
                 bpy.data.objects.remove(object, do_unlink=True)
+
+    @staticmethod
+    def delete_unused_data_blocks():
+        for block in bpy.data.meshes:
+            if block.users == 0:
+                bpy.data.meshes.remove(block)
+
+        for block in bpy.data.materials:
+            if block.users == 0:
+                bpy.data.materials.remove(block)
+
+        for block in bpy.data.textures:
+            if block.users == 0:
+                bpy.data.textures.remove(block)
+
+        for block in bpy.data.images:
+            if block.users == 0:
+                bpy.data.images.remove(block)
 
     @staticmethod
     def create_lods(objects, lod_count, decimate_ratio):
