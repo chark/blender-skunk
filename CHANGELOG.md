@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [v0.0.10](https://github.com/chark/blender-skunk/compare/v0.0.9...v0.0.10) - 2024-08-14
 
+### Added
+
+- Object distribution will sort objects by name before distributing.
+
 ### Fixed
 
 - Distance not being used in object distribution.

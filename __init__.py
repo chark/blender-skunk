@@ -33,7 +33,10 @@ class OpDistributeObjects(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
-        objects = context.selected_objects[:]
+        objects = sorted(
+            context.selected_objects[:],
+            key=lambda object: object.name
+        )
 
         self.distribute_objects(
             objects=objects,
