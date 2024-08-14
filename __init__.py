@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 9),
+    'version': (0, 0, 10),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -35,7 +35,10 @@ class OpDistributeObjects(bpy.types.Operator):
     def execute(self, context):
         objects = context.selected_objects[:]
 
-        self.distribute_objects(objects)
+        self.distribute_objects(
+            objects=objects,
+            distance=self.distance
+        )
 
         self.report(
             {'INFO'},
