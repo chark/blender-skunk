@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 10),
+    'version': (0, 0, 11),
     'blender': (4, 1, 0),
     'category': 'Object',
 }
@@ -595,6 +595,10 @@ class OpBulkExport(bpy.types.Operator):
                 axis_up='Z',
                 use_space_transform=False,
                 apply_unit_scale=True,
+                primary_bone_axis='-Y',
+                secondary_bone_axis='-X',
+                use_armature_deform_only=True,
+                add_leaf_bones=False
             )
 
             object.location = original_location
