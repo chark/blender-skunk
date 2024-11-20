@@ -1,6 +1,6 @@
 ﻿# Blender Skunk
 
-Blender add-on, which provides a set of tools for bulk 3D model processing.
+Blender add-on, which provides a set of tools for bulk 3D model processing. This add-on is designed to be used with how Unity so that LODs are imported automatically (see [Import Mesh with LOD settings](https://docs.unity3d.com/6000.0/Documentation/Manual/importing-lod-meshes.html)).
 
 <p align="center">
   <img src="screenshot.png" />
