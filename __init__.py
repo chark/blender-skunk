@@ -9,8 +9,8 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 11),
-    'blender': (4, 1, 0),
+    'version': (0, 0, 12),
+    'blender': (4, 3, 0),
     'category': 'Object',
 }
 
@@ -58,14 +58,15 @@ class OpDistributeObjects(bpy.types.Operator):
             if object.parent:
                 continue
 
-            object.location = (offset_x, 0, 0)
+            (object_x, object_y, object_z) = object.location.copy()
+            object.location = (offset_x, object_y, object_z)
             offset_x = offset_x + distance
 
 
 class OpCreateEmptyParents(bpy.types.Operator):
     bl_idname = 'object.skunk_create_empty_parents'
     bl_label = 'Create Empty Parents'
-    bl_description = 'Creates empty parent for selected objects'
+    bl_description = 'Creates empty parent for each selected object'
     bl_options = {'REGISTER', 'UNDO'}
 
     child_name_suffix: bpy.props.StringProperty(
@@ -121,7 +122,7 @@ class OpCreateEmptyParents(bpy.types.Operator):
 class OpMatchMeshNames(bpy.types.Operator):
     bl_idname = 'object.skunk_match_mesh_names'
     bl_label = 'Match Mesh Names'
-    bl_description = 'Matches names of selected object meshes to the object names'
+    bl_description = 'Matches names of selected object mesh data to object names'
     bl_options = {'REGISTER', 'UNDO'}
 
     def invoke(self, context, event):
@@ -160,7 +161,7 @@ class OpSortMeshByMaterial(bpy.types.Operator):
     bl_idname = 'object.skunk_sort_mesh_by_material'
     bl_label = 'Sort Mesh By Material'
     bl_description = (
-        'Sorts mesh data by material information, this ensures same the material '
+        'Sorts mesh data by material information, this ensures same material '
         'order on each selected object'
     )
 
@@ -617,13 +618,20 @@ class SkunkPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
+        layout.label(text='Structure')
         layout.operator(OpDistributeObjects.bl_idname)
         layout.operator(OpCreateEmptyParents.bl_idname)
+
+        layout.label(text='Mesh Data')
         layout.operator(OpMatchMeshNames.bl_idname)
         layout.operator(OpSortMeshByMaterial.bl_idname)
         layout.operator(OpCreateUVs.bl_idname)
+
+        layout.label(text='LODs')
         layout.operator(OpDeleteLODs.bl_idname)
         layout.operator(OpCreateLODs.bl_idname)
+
+        layout.label(text='Exporting')
         layout.operator(OpBulkExport.bl_idname)
 
 
