@@ -9,7 +9,7 @@ bl_info = {
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
     'support': 'COMMUNITY',
-    'version': (0, 0, 12),
+    'version': (0, 0, 13),
     'blender': (4, 3, 0),
     'category': 'Object',
 }
@@ -23,10 +23,21 @@ class OpDistributeObjects(bpy.types.Operator):
 
     distance: bpy.props.IntProperty(
         name='Distance',
-        description='Distance between objects on X axis',
+        description='Distance between objects on selected Axis',
         default=10,
-        min=0,
-        max=100
+        min=-1000,
+        max=1000
+    )
+
+    axis: bpy.props.EnumProperty(
+        name='Axis',
+        description='Axis to distribute objects along',
+        items=[
+            ('X', 'X Axis', 'Distribute along the X axis'),
+            ('Y', 'Y Axis', 'Distribute along the Y axis'),
+            ('Z', 'Z Axis', 'Distribute along the Z axis'),
+        ],
+        default='X'
     )
 
     def invoke(self, context, event):
@@ -50,17 +61,22 @@ class OpDistributeObjects(bpy.types.Operator):
 
         return {'FINISHED'}
 
-    @staticmethod
-    def distribute_objects(objects, distance=10):
-        offset_x = 0
+    def distribute_objects(self, objects, distance=10):
+        offset = 0
 
         for object in objects:
             if object.parent:
                 continue
 
-            (object_x, object_y, object_z) = object.location.copy()
-            object.location = (offset_x, object_y, object_z)
-            offset_x = offset_x + distance
+            loc = object.location.copy()
+            if self.axis == 'X':
+                object.location = (offset, loc.y, loc.z)
+            elif self.axis == 'Y':
+                object.location = (loc.x, offset, loc.z)
+            elif self.axis == 'Z':
+                object.location = (loc.x, loc.y, offset)
+
+            offset += distance
 
 
 class OpCreateEmptyParents(bpy.types.Operator):
@@ -72,7 +88,7 @@ class OpCreateEmptyParents(bpy.types.Operator):
     child_name_suffix: bpy.props.StringProperty(
         name='Child Name Suffix',
         description='Suffix appended to child names',
-        default='Child'
+        default='LOD0'
     )
 
     def invoke(self, context, event):
@@ -107,6 +123,14 @@ class OpCreateEmptyParents(bpy.types.Operator):
         # Create parent
         bpy.ops.object.add(type='EMPTY')
         parent_object = bpy.context.object
+
+        # Clear parent object collections
+        for collection in parent_object.users_collection:
+            collection.objects.unlink(parent_object)
+
+        # Move parent to the same collections as child
+        for collection in object.users_collection:
+            collection.objects.link(parent_object)
 
         # Move parent
         object_location = object.location.copy()
@@ -522,7 +546,8 @@ class OpCreateLODs(bpy.types.Operator):
         object_copy.data = object.data.copy()
         object_copy.location = object.location
 
-        bpy.context.collection.objects.link(object_copy)
+        for collection in object.users_collection:
+            collection.objects.link(object_copy)
 
         # Naming
         if object.name.endswith('_LOD0'):
