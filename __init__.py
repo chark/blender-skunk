@@ -570,6 +570,19 @@ class OpBulkExport(bpy.types.Operator):
     bl_label = 'Bulk Export'
     bl_description = 'Exports selected objects as FBX to desktop'
 
+    export_directory: bpy.props.StringProperty(
+        name='Export Directory',
+        description='Directory to export FBX files to',
+        subtype='DIR_PATH',
+        default=os.path.join(os.path.expanduser('~'), 'Desktop')
+    )
+
+    is_export_all_animations: bpy.props.BoolProperty(
+        name='Export All Animations',
+        description='Export ALL animations, even those which are not enabled in any NLP tracks',
+        default=False,
+    )
+
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
@@ -585,8 +598,9 @@ class OpBulkExport(bpy.types.Operator):
 
         return {'FINISHED'}
 
-    @staticmethod
-    def export_fbx(objects):
+    def export_fbx(self, objects):
+        if not os.path.exists(self.export_directory):
+            os.makedirs(self.export_directory)
 
         # Create a temp scene where exporting will take place
         temp_scene = bpy.data.scenes.new('TempFBXExportScene')
@@ -599,7 +613,7 @@ class OpBulkExport(bpy.types.Operator):
                 temp_scene.collection.objects.link(child_object)
 
         for object in objects:
-            path = os.path.join(os.path.expanduser('~'), 'Desktop', f'{object.name}.fbx')
+            path = os.path.join(self.export_directory, f'{object.name}.fbx')
 
             bpy.ops.object.select_all(action='DESELECT')
 
@@ -624,6 +638,7 @@ class OpBulkExport(bpy.types.Operator):
                 primary_bone_axis='-Y',
                 secondary_bone_axis='-X',
                 use_armature_deform_only=True,
+                bake_anim_use_all_actions=self.is_export_all_animations,
                 add_leaf_bones=False
             )
 
