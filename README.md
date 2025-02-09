@@ -94,8 +94,8 @@ Once you have your `LOD0` object setup with UVs and proper naming, you can quick
 ### 6. Bulk Export
 
 <p align="center">
-  <img src="screenshots/step-06-export.png" />
-  <img src="screenshots/step-06-fbx.png" />
+  <img src="screenshots/step-06-export.png" width="40%" />
+  <img src="screenshots/step-06-fbx.png" width="40%" />
 </p>
 
 After fully preparing the object, you can quickly export it:
