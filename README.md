@@ -22,12 +22,15 @@ Blender add-on, which provides a set of tools for bulk 3D model processing. This
 
 ## Installation
 
+> [!WARNING]
+> This add-on was tested on [Blender v4.3.0](https://www.blender.org/download/), other versions might not work...
+
 - Download `.zip` file from the [latest release](https://github.com/chark/blender-skunk/releases/latest)
 - In Blender, select `Edit > Preferences`
 - Open _Add-ons_ tab and click _Install_
 - Select the downloaded `.zip` file and click _Install Add-on_
 
-## Releases
+## Links
 
 - [Latest Release](https://github.com/chark/blender-skunk/releases/latest)
 - [Changelog](CHANGELOG.md)
