@@ -577,9 +577,16 @@ class OpBulkExport(bpy.types.Operator):
         default=os.path.join(os.path.expanduser('~'), 'Desktop')
     )
 
+    is_export_deform_bones_only: bpy.props.BoolProperty(
+        name='Export Deform Bones Only',
+        description='Should only bones which are marked as deforming be exported or all bones?',
+        default=True,
+    )
+
     is_export_all_animations: bpy.props.BoolProperty(
         name='Export All Animations',
-        description='Export ALL animations, even those which are not enabled in any NLP tracks',
+        description='Should ALL animations be exported, even those which are not enabled in '
+                    'any NLP tracks?',
         default=False,
     )
 
@@ -637,7 +644,7 @@ class OpBulkExport(bpy.types.Operator):
                 apply_unit_scale=True,
                 primary_bone_axis='-Y',
                 secondary_bone_axis='-X',
-                use_armature_deform_only=True,
+                use_armature_deform_only=self.is_export_deform_bones_only,
                 bake_anim_use_all_actions=self.is_export_all_animations,
                 add_leaf_bones=False
             )

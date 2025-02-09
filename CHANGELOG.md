@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [v0.0.15](https://github.com/chark/blender-skunk/compare/v0.0.14...v0.0.15) - 2025-XX-XX
 
+### Added
+
+- Option to
+
 ## [v0.0.14](https://github.com/chark/blender-skunk/compare/v0.0.13...v0.0.14) - 2025-02-03
 
 ### Added
