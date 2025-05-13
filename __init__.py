@@ -583,10 +583,16 @@ class OpBulkExport(bpy.types.Operator):
         default=True,
     )
 
+    is_export_leaf_bones: bpy.props.BoolProperty(
+        name='Export Leaf Bones',
+        description='Should leaf bones be exported?',
+        default=True,
+    )
+
     is_export_all_animations: bpy.props.BoolProperty(
         name='Export All Animations',
         description='Should ALL animations be exported, even those which are not enabled in '
-                    'any NLP tracks?',
+                    'any Nonlinear Animation (NLA) tracks?',
         default=False,
     )
 
@@ -646,7 +652,7 @@ class OpBulkExport(bpy.types.Operator):
                 secondary_bone_axis='-X',
                 use_armature_deform_only=self.is_export_deform_bones_only,
                 bake_anim_use_all_actions=self.is_export_all_animations,
-                add_leaf_bones=False
+                add_leaf_bones=self.is_export_leaf_bones
             )
 
             object.location = original_location
