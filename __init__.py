@@ -1,4 +1,4 @@
-﻿import math
+import math
 import bpy
 import os
 
