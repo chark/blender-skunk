@@ -1,0 +1,42 @@
+﻿name: Create Release
+
+on:
+  workflow_dispatch: { }
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create release zip
+        run: python build.py
+
+      - name: Create GitHub Release
+        run: |
+          echo 'Extracting version from release .zip file'
+          zipfile=$(find . -maxdepth 1 -type f -name '*.zip' | head -n 1)
+          zipFileBaseName="${zipfile%.zip}"
+          releaseVersion="${zipFileBaseName##*-}"
+
+          echo "Extracting changelog for version ${releaseVersion}"
+          changelogContent=$(
+            awk -v ver="${releaseVersion}" '
+              BEGIN { found=0 }
+              $0 ~ "\\[" ver "\\]" { found=1; next }
+              found && /^## \[/ { exit }
+              found { print }
+            " "${GITHUB_WORKSPACE}/CHANGELOG.md"
+          )
+
+          changelogContent=$(echo "${changelogContent}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+          echo 'Creating GitHub release'
+          gh release create releaseVersion \
+            zipfile \
+            --title "${releaseVersion}" \
+            --notes "${changelogContent}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
