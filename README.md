@@ -1,4 +1,4 @@
-﻿# Blender Skunk [![Blender v4.3.0](https://img.shields.io/badge/Blender-v4.3.0-blue.svg)](https://www.blender.org/download/)
+﻿# Blender Skunk [![Blender v5.0.0](https://img.shields.io/badge/Blender-v5.0.0-blue.svg)](https://www.blender.org/download/)
 
 Blender add-on, which provides a set of tools for bulk 3D model processing. This add-on is designed to be used with Unity, so that LODs are imported automatically (see [Import Mesh with LOD settings](https://docs.unity3d.com/6000.0/Documentation/Manual/importing-lod-meshes.html)).
 
@@ -23,7 +23,7 @@ Blender add-on, which provides a set of tools for bulk 3D model processing. This
 ## Installation
 
 > [!WARNING]
-> This add-on was tested on [Blender v4.3.0](https://www.blender.org/download/), other versions might not work...
+> This add-on was tested on [Blender v5.0.0](https://www.blender.org/download/), other versions might not work...
 
 - Download `.zip` file from the [latest release](https://github.com/chark/blender-skunk/releases/latest)
 - In Blender, select `Edit > Preferences`
