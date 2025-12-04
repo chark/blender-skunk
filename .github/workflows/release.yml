@@ -28,7 +28,7 @@ jobs:
               $0 ~ "\\[" ver "\\]" { found=1; next }
               found && /^## \[/ { exit }
               found { print }
-            " "${GITHUB_WORKSPACE}/CHANGELOG.md"
+            ' "${GITHUB_WORKSPACE}/CHANGELOG.md"
           )
 
           changelogContent=$(echo "${changelogContent}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
