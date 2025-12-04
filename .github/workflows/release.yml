@@ -26,7 +26,6 @@ jobs:
         run: bash "${GITHUB_WORKSPACE}/.github/workflows/extract-changelog-content.sh"
 
       - name: Create GitHub release
-        id: extractChangelogContent
         env:
           RELEASE_VERSION: ${{ steps.extractReleaseVersion.outputs.releaseVersion }}
           CHANGELOG_CONTENT: ${{ steps.extractChangelogContent.outputs.changelogContent }}
