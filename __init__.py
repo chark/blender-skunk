@@ -4,7 +4,7 @@ import os
 
 bl_info = {
     'name': 'Blender Skunk',
-    'description': 'Collection of tools for processing models for CHARK games',
+    'description': 'Collection of tools for quickly processing .fbx models in bulk for Unity games, with some utilities for fast & dirty LOD generation',
     'author': 'CHARK',
     'tracker_url': 'https://github.com/chark/blender-skunk',
     'doc_url': 'https://github.com/chark/blender-skunk',
