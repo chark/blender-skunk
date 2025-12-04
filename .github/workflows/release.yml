@@ -28,6 +28,6 @@ jobs:
       - name: Create GitHub release
         env:
           RELEASE_VERSION: ${{ steps.extractReleaseVersion.outputs.releaseVersion }}
-          CHANGELOG_CONTENT: ${{ steps.extractChangelogContent.outputs.changelogContent }}
+          RELEASE_MESSAGE: ${{ steps.extractChangelogContent.outputs.changelogFile }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash "${GITHUB_WORKSPACE}/.github/workflows/create-github-release.sh"

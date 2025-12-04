@@ -17,6 +17,11 @@ awk -v ver="${releaseVersion}" '
 ' "${changelogFile}"
 )
 
+# Create .tmp file for changelog contents as GitHub actions complains when storing directly in vars
+changelogContent=$(echo "${changelogContent}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+changelogFile=$(mktemp "/tmp/CHANGELOG.XXXXXX.md")
+echo "${changelogContent}" > "${changelogFile}"
+
 # Store in GitHub variables
 changelogContent=$(echo "${changelogContent}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-echo "changelogContent=${changelogContent}" >> "${GITHUB_OUTPUT}"
+echo "changelogFile=${changelogFile}" >> "${GITHUB_OUTPUT}"
