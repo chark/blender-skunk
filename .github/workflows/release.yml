@@ -31,7 +31,6 @@ jobs:
             " "${GITHUB_WORKSPACE}/CHANGELOG.md"
           )
 
-          echo "${changelogContent}"
           changelogContent=$(echo "${changelogContent}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
           echo 'Creating GitHub release'
