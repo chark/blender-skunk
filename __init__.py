@@ -596,6 +596,17 @@ class OpBulkExport(bpy.types.Operator):
         default=False,
     )
 
+    vertex_color_mode: bpy.props.EnumProperty(
+        name='Vertex Colors',
+        description='Color space of exported vertex colors',
+        items=[
+            ('LINEAR', 'Linear', 'Export vertex colors in linear color space'),
+            ('SRGB', 'sRGB', 'Export vertex colors in sRGB color space'),
+            ('NONE', 'None', 'Do not export vertex colors'),
+        ],
+        default='LINEAR'
+    )
+
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
@@ -652,7 +663,8 @@ class OpBulkExport(bpy.types.Operator):
                 secondary_bone_axis='-X',
                 use_armature_deform_only=self.is_export_deform_bones_only,
                 bake_anim_use_all_actions=self.is_export_all_animations,
-                add_leaf_bones=self.is_export_leaf_bones
+                add_leaf_bones=self.is_export_leaf_bones,
+                colors_type=self.vertex_color_mode
             )
 
             object.location = original_location
